@@ -213,23 +213,13 @@ class RepConv(nn.Module):
 class CA_block(nn.Module):
     def __init__(self, channel, reduction=16):
         super(CA_block, self).__init__()
-        #c*h*w -> c*1*w
-        # self.x_AvgPool = nn.AvgPool2d(kernel_size=)
-        # self.y_AvgPool = nn.AvgPool2d()
-        # self.avgpool   = nn.AvgPool2d(kernel_size=1)
-
-        self.conv_hw   = nn.Conv2d(channel, channel // reduction, kernel_size=1, stride=1, bias=False)
-
+        self.conv_hw      = nn.Conv2d(channel, channel // reduction, kernel_size=1, stride=1, bias=False)
         self.conv_split_h = nn.Conv2d(channel // reduction, channel, kernel_size=1, stride=1, bias=False)
         self.conv_split_w = nn.Conv2d(channel // reduction, channel, kernel_size=1, stride=1, bias=False)
 
-        self.BN        = nn.BatchNorm2d(channel // reduction)
-
-        self.sigmoid   = nn.Sigmoid()
-
-        self.relu      = nn.ReLU()
-
-
+        self.BN           = nn.BatchNorm2d(channel // reduction)
+        self.sigmoid      = nn.Sigmoid()
+        self.relu         = nn.ReLU()
 
     def forward(self, x):
         # x -> 1*512*40*40
@@ -255,7 +245,6 @@ class CA_block(nn.Module):
         out = x * sigmoid_h.expand_as(x) * sigmoid_w.expand_as(x)
         return out
 
-
 def fuse_conv_and_bn(conv, bn):
     fusedconv = nn.Conv2d(conv.in_channels,
                           conv.out_channels,
@@ -275,7 +264,6 @@ def fuse_conv_and_bn(conv, bn):
     # fusedconv.bias.copy_(torch.mm(w_bn, b_conv.reshape(-1, 1)).reshape(-1) + b_bn)
     fusedconv.bias.copy_((torch.mm(w_bn, b_conv.reshape(-1, 1)).reshape(-1) + b_bn).detach())
     return fusedconv
-
 
 class YoloBody(nn.Module):
     def __init__(self, anchors_mask, num_classes, phi, pretrained=False):
